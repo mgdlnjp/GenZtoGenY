@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traducteur Gen Z → Gen Y</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔄 Traducteur Gen Z → Gen Y</h1>
+            <p class="subtitle">Comprenez enfin ce que disent les jeunes !</p>
+        </header>
+
+        <div class="translator-section">
+            <div class="input-section">
+                <h2>💬 Expression Gen Z</h2>
+                <textarea
+                    id="genZInput"
+                    placeholder="Entrez une expression Gen Z (ex: 'C'est trop slay frr no cap')"
+                    rows="5"
+                ></textarea>
+            </div>
+
+            <div class="button-section">
+                <button id="translateBtn" class="translate-btn">
+                    Traduire →
+                </button>
+                <button id="clearBtn" class="clear-btn">
+                    Effacer
+                </button>
+            </div>
+
+            <div class="output-section">
+                <h2>🎯 Traduction Gen Y</h2>
+                <div id="genYOutput" class="output-box">
+                    <p class="placeholder">La traduction apparaîtra ici...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="dictionary-section">
+            <h2>📖 Dictionnaire des expressions</h2>
+            <div id="dictionaryList" class="dictionary-grid"></div>
+        </div>
+
+        <footer>
+            <p>Créé avec ❤️ pour rapprocher les générations</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
