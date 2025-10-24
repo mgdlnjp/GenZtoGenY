@@ -38,7 +38,31 @@ Cette application aide à combler le fossé générationnel en traduisant les ex
 - CSS3 (avec dégradés et animations)
 - JavaScript vanilla (pas de framework requis)
 
-## Installation
+## Déploiement en ligne (GitHub Pages)
+
+### Accéder au site live
+
+Une fois déployé sur GitHub Pages, votre site sera accessible à l'adresse :
+
+```
+https://[VOTRE-USERNAME].github.io/GenZtoGenY/
+```
+
+### Comment activer GitHub Pages
+
+1. Allez sur votre repository GitHub : `https://github.com/mgdlnjp/GenZtoGenY`
+2. Cliquez sur **Settings** (Paramètres)
+3. Dans le menu de gauche, cliquez sur **Pages**
+4. Sous **Source**, sélectionnez :
+   - **Branch** : `claude/gen-z-translator-011CURtB6B4SF3t86zDQAanj` (ou `main` si vous avez fusionné)
+   - **Folder** : `/ (root)`
+5. Cliquez sur **Save**
+6. Attendez quelques minutes que GitHub déploie votre site
+7. Le lien du site apparaîtra en haut de la page Pages
+
+Votre site sera alors accessible publiquement en ligne !
+
+## Installation locale
 
 Aucune installation nécessaire ! Il suffit de :
 
