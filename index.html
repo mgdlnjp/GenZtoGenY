@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Traducteur Gen Z → Gen Y</title>
-    <meta name="description" content="Traduisez l'argot de la Gen Z en langage Gen Y : slay, frr, no cap, bussin… Plus de 80 expressions expliquées.">
+    <meta name="description" content="Collez un message plein d'argot Gen Z (slay, frr, no cap, bussin…) et lisez-le en clair. 86 expressions expliquées.">
     <link rel="icon" href="favicon.ico" sizes="32x32">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -13,13 +13,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;900&display=swap">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <symbol id="i-send" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 5.5h-8a2 2 0 0 0-2 2v8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+        <symbol id="i-check" viewBox="0 0 24 24"><path d="M5.5 12.5l4 4 9-9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    </svg>
+
     <header class="top">
         <div class="wrap top-inner">
             <a class="brand" href="./" aria-label="Traducteur Gen Z vers Gen Y, accueil">
-                <img src="logo.svg" alt="" width="36" height="36">
+                <img src="logo.svg" alt="" width="34" height="34">
                 <span>Gen Z → Gen Y</span>
             </a>
             <a class="top-link" href="#dictionnaire">Dictionnaire <span class="count" data-count></span></a>
@@ -27,40 +34,44 @@
     </header>
 
     <main>
-        <section class="hero wrap">
-            <h1>Comprenez enfin ce que disent les jeunes</h1>
-            <p class="subtitle">Collez une phrase en argot Gen Z : le traducteur surligne chaque expression et la remplace par ce qu'un Gen Y aurait dit.</p>
+        <section class="wrap stage">
+            <div class="intro">
+                <h1>Comprenez enfin ce que disent les jeunes</h1>
+                <p>Collez le message que vous avez reçu. Chaque expression Gen Z est repérée, surlignée et traduite en clair.</p>
+            </div>
 
-            <div class="translator">
-                <div class="pane pane-in">
-                    <div class="pane-head">
-                        <label for="genZInput">Gen Z</label>
-                        <button id="clearBtn" class="ghost" type="button" hidden>Effacer</button>
+            <div class="chat" aria-label="Traducteur">
+                <div class="chat-head">
+                    <div class="contact">
+                        <span class="avatar" aria-hidden="true">Z</span>
+                        <div>
+                            <p class="contact-name">Traducteur Gen Z</p>
+                            <p class="contact-status"><span data-count></span> expressions connues</p>
+                        </div>
                     </div>
-                    <textarea id="genZInput" rows="6" spellcheck="false"
-                        placeholder="Ex. : c'est trop slay frr no cap"></textarea>
-                    <div class="examples" aria-label="Exemples à essayer">
-                        <span class="examples-label">Essayez :</span>
-                        <button type="button" class="example">c'est trop slay frr no cap</button>
-                        <button type="button" class="example">ce burger est bussin, sheesh</button>
-                        <button type="button" class="example">lowkey son rizz est cringe, mood</button>
+                    <button id="clearBtn" class="text-btn" type="button" hidden aria-label="Effacer la conversation">Effacer</button>
+                </div>
+
+                <div id="thread" class="thread" aria-live="polite">
+                    <div class="thread-empty" id="threadEmpty">
+                        <p class="empty-title">Collez un message reçu, ou essayez un exemple</p>
+                        <div class="examples">
+                            <button type="button" class="example">c'est trop slay frr no cap</button>
+                            <button type="button" class="example">ce burger est bussin, sheesh</button>
+                            <button type="button" class="example">lowkey son rizz est cringe, mood</button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="pane pane-out" aria-live="polite">
-                    <div class="pane-head">
-                        <span class="pane-title">Gen Y</span>
-                        <button id="copyBtn" class="ghost" type="button" hidden>Copier</button>
-                    </div>
-                    <div id="genYOutput" class="output">
-                        <p class="empty">La traduction s'affiche ici dès que vous écrivez.</p>
-                    </div>
-                </div>
-
-                <div class="actions">
-                    <button id="translateBtn" class="primary" type="button">Traduire</button>
-                    <span class="hint"><kbd>Ctrl</kbd> + <kbd>Entrée</kbd></span>
-                </div>
+                <form class="composer" id="composer">
+                    <label for="genZInput" class="sr-only">Message en argot Gen Z</label>
+                    <textarea id="genZInput" rows="1" spellcheck="false" placeholder="Collez un message Gen Z…"></textarea>
+                    <button id="translateBtn" class="send" type="submit" aria-label="Traduire">
+                        <span>Traduire</span>
+                        <svg width="20" height="20" aria-hidden="true"><use href="#i-send"/></svg>
+                    </button>
+                </form>
+                <p class="composer-hint">Entrée pour traduire, Maj + Entrée pour aller à la ligne</p>
             </div>
         </section>
 
@@ -68,13 +79,14 @@
             <div class="wrap">
                 <div class="dict-head">
                     <div>
-                        <h2>Dictionnaire des expressions</h2>
-                        <p><span data-count></span> expressions, de A à Z.</p>
+                        <h2>Le dictionnaire</h2>
+                        <p><span data-count></span> expressions Gen Z et leur sens, de A à Z.</p>
                     </div>
-                    <div class="search">
-                        <label for="dictSearch" class="sr-only">Chercher une expression</label>
-                        <input id="dictSearch" type="search" placeholder="Chercher une expression ou un sens" autocomplete="off">
-                    </div>
+                    <label class="search">
+                        <span class="sr-only">Chercher une expression</span>
+                        <svg width="18" height="18" aria-hidden="true"><use href="#i-search"/></svg>
+                        <input id="dictSearch" type="search" placeholder="Chercher un mot ou un sens" autocomplete="off">
+                    </label>
                 </div>
                 <div id="dictionaryList" class="dict-list"></div>
                 <p id="dictEmpty" class="dict-empty" hidden>Aucune expression ne correspond. Essayez un autre mot, par exemple « vibe » ou « génial ».</p>
@@ -86,6 +98,6 @@
         <p>Créé avec ❤️ pour rapprocher les générations</p>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=3"></script>
 </body>
 </html>

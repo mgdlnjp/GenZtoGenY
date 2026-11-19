@@ -99,16 +99,38 @@ const translationDictionary = {
 const terms = Object.keys(translationDictionary).sort((a, b) => b.length - a.length);
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const slangPattern = new RegExp(
-    '(?<![\\p{L}\\p{N}])(' + terms.map(escapeRegex).join('|') + ')(?![\\p{L}\\p{N}])',
+    '(^|[^\\p{L}\\p{N}])(' + terms.map(escapeRegex).join('|') + ')(?=$|[^\\p{L}\\p{N}])',
     'giu'
 );
 
+// Découpe le texte en morceaux : { text } ou { slang, meaning }
+function translate(text) {
+    const parts = [];
+    const found = new Map();
+    let last = 0;
+    for (const m of text.matchAll(slangPattern)) {
+        const start = m.index + m[1].length;
+        const word = m[2];
+        const meaning = translationDictionary[word.toLowerCase()];
+        if (start > last) parts.push({ text: text.slice(last, start) });
+        parts.push({ slang: word, meaning });
+        found.set(word.toLowerCase(), meaning);
+        last = start + word.length;
+    }
+    if (last < text.length) parts.push({ text: text.slice(last) });
+    return { parts, found };
+}
+
+// ---------------------------------------------------------------------------
+// Conversation
+// ---------------------------------------------------------------------------
+
 const $ = (id) => document.getElementById(id);
+const thread = $('thread');
+const emptyState = $('threadEmpty');
 const input = $('genZInput');
-const output = $('genYOutput');
-const copyBtn = $('copyBtn');
+const sendBtn = $('translateBtn');
 const clearBtn = $('clearBtn');
-let plainTranslation = '';
 
 function el(tag, className, text) {
     const node = document.createElement(tag);
@@ -117,72 +139,112 @@ function el(tag, className, text) {
     return node;
 }
 
-function showEmpty(message) {
-    output.replaceChildren(el('p', 'empty', message));
-    copyBtn.hidden = true;
-    plainTranslation = '';
+function icon(name) {
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('width', '16');
+    svg.setAttribute('height', '16');
+    svg.setAttribute('aria-hidden', 'true');
+    const use = document.createElementNS(ns, 'use');
+    use.setAttribute('href', '#i-' + name);
+    svg.append(use);
+    return svg;
 }
 
-function translateText() {
-    const text = input.value;
-    clearBtn.hidden = text === '';
+function copyButton(text) {
+    const btn = el('button', 'tool');
+    btn.type = 'button';
+    const label = el('span', '', 'Copier');
+    btn.append(icon('copy'), label);
+    btn.addEventListener('click', () => {
+        navigator.clipboard.writeText(text).then(
+            () => {
+                btn.replaceChildren(icon('check'), el('span', '', 'Copié'));
+                setTimeout(() => btn.replaceChildren(icon('copy'), el('span', '', 'Copier')), 1800);
+            },
+            () => (label.textContent = 'Copie impossible')
+        );
+    });
+    return btn;
+}
 
-    if (!text.trim()) {
-        showEmpty("La traduction s'affiche ici dès que vous écrivez.");
-        return;
-    }
+function addExchange(text) {
+    emptyState.hidden = true;
+    clearBtn.hidden = false;
 
-    const sentence = el('p', 'sentence');
-    const found = new Map();
-    let plain = '';
-    let last = 0;
+    const incoming = el('div', 'msg msg-in new');
+    incoming.append(el('p', 'msg-label', 'Gen Z'), el('p', 'bubble', text));
 
-    for (const match of text.matchAll(slangPattern)) {
-        const key = match[0].toLowerCase();
-        const meaning = translationDictionary[key];
-        const before = text.slice(last, match.index);
-        sentence.append(before);
-        const mark = el('mark', '', meaning);
-        mark.title = match[0];
-        sentence.append(mark);
-        plain += before + meaning;
-        found.set(key, meaning);
-        last = match.index + match[0].length;
-    }
-    sentence.append(text.slice(last));
-    plain += text.slice(last);
+    const { parts, found } = translate(text);
+    const reply = el('div', 'msg msg-out new');
 
     if (found.size === 0) {
-        const miss = el('p', 'miss');
-        miss.append('Aucune expression Gen Z repérée. Essayez par exemple ');
-        miss.append(el('strong', '', 'slay'), ', ', el('strong', '', 'no cap'), ' ou ', el('strong', '', 'bussin'), '.');
-        output.replaceChildren(miss);
-        copyBtn.hidden = true;
-        plainTranslation = '';
-        return;
+        reply.classList.add('miss');
+        const bubble = el('p', 'bubble');
+        bubble.append('Aucune expression Gen Z repérée dans ce message. Essayez par exemple ',
+            el('strong', '', 'slay'), ', ', el('strong', '', 'no cap'), ' ou ', el('strong', '', 'bussin'), '.');
+        reply.append(el('p', 'msg-label', 'Gen Y'), bubble);
+    } else {
+        const bubble = el('p', 'bubble');
+        let plain = '';
+        parts.forEach((part) => {
+            if (part.text !== undefined) {
+                bubble.append(part.text);
+                plain += part.text;
+            } else {
+                const mark = el('mark', '', part.meaning);
+                mark.title = part.slang;
+                bubble.append(mark);
+                plain += part.meaning;
+            }
+        });
+
+        const gloss = el('ul', 'gloss');
+        found.forEach((meaning, word) => {
+            const li = el('li');
+            li.append(el('b', '', word), ' : ' + meaning);
+            gloss.append(li);
+        });
+
+        const tools = el('div', 'msg-tools');
+        tools.append(copyButton(plain));
+
+        const label = found.size === 1 ? 'Gen Y, 1 expression traduite' : `Gen Y, ${found.size} expressions traduites`;
+        reply.append(el('p', 'msg-label', label), bubble, gloss, tools);
     }
 
-    const list = el('dl');
-    found.forEach((meaning, key) => list.append(el('dt', '', key), el('dd', '', meaning)));
-    const summary = el('div', 'found');
-    summary.append(
-        el('p', 'found-title', found.size === 1 ? '1 expression traduite' : `${found.size} expressions traduites`),
-        list
-    );
-
-    output.classList.remove('fresh');
-    void output.offsetWidth; // relance l'animation du surligneur
-    output.classList.add('fresh');
-    output.replaceChildren(sentence, summary);
-    plainTranslation = plain;
-    copyBtn.hidden = false;
-    copyBtn.textContent = 'Copier';
+    thread.append(incoming, reply);
+    reply.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    thread.scrollTop = thread.scrollHeight;
 }
 
-function clearAll() {
+function send() {
+    const text = input.value.trim();
+    if (!text) {
+        input.focus();
+        return;
+    }
+    addExchange(text);
     input.value = '';
-    translateText();
+    autosize();
+    updateSend();
     input.focus();
+}
+
+function clearConversation() {
+    thread.querySelectorAll('.msg').forEach((m) => m.remove());
+    emptyState.hidden = false;
+    clearBtn.hidden = true;
+    input.focus();
+}
+
+function autosize() {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 180) + 'px';
+}
+
+function updateSend() {
+    sendBtn.disabled = input.value.trim() === '';
 }
 
 // ---------------------------------------------------------------------------
@@ -192,7 +254,6 @@ function clearAll() {
 const normalize = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 function displayDictionary(filter = '') {
-    const list = $('dictionaryList');
     const query = normalize(filter.trim());
     const groups = new Map();
 
@@ -219,7 +280,7 @@ function displayDictionary(filter = '') {
         blocks.push(block);
     });
 
-    list.replaceChildren(...blocks);
+    $('dictionaryList').replaceChildren(...blocks);
     $('dictEmpty').hidden = blocks.length > 0;
 }
 
@@ -231,36 +292,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const total = Object.keys(translationDictionary).length;
     document.querySelectorAll('[data-count]').forEach((n) => (n.textContent = total));
     displayDictionary();
+    updateSend();
 
-    let timer;
-    input.addEventListener('input', () => {
-        clearTimeout(timer);
-        timer = setTimeout(translateText, 250);
+    $('composer').addEventListener('submit', (e) => {
+        e.preventDefault();
+        send();
     });
     input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
             e.preventDefault();
-            translateText();
+            send();
         }
     });
-
-    $('translateBtn').addEventListener('click', translateText);
-    clearBtn.addEventListener('click', clearAll);
+    input.addEventListener('input', () => {
+        autosize();
+        updateSend();
+    });
+    clearBtn.addEventListener('click', clearConversation);
 
     document.querySelectorAll('.example').forEach((btn) =>
-        btn.addEventListener('click', () => {
-            input.value = btn.textContent;
-            translateText();
-        })
+        btn.addEventListener('click', () => addExchange(btn.textContent))
     );
-
-    copyBtn.addEventListener('click', () => {
-        if (!plainTranslation) return;
-        navigator.clipboard.writeText(plainTranslation).then(
-            () => (copyBtn.textContent = 'Copié'),
-            () => (copyBtn.textContent = 'Copie impossible')
-        );
-    });
 
     $('dictSearch').addEventListener('input', (e) => displayDictionary(e.target.value));
 });
