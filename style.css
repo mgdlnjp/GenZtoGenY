@@ -214,3 +214,14 @@ mark {
     .chat-head { padding: 12px 14px; }
     .thread { padding: 18px 12px; }
 }
+
+/* Bannières publicitaires (Adsterra) : 160×600 sur les côtés quand il y a la place,
+   728×90 (ordinateur) ou 320×50 (téléphone) entre deux sections. */
+.ad-side { position: fixed; top: 96px; width: 160px; min-height: 600px; display: none; z-index: 1; }
+.ad-left  { right: calc(50% + 580px + 20px); }
+.ad-right { left:  calc(50% + 580px + 20px); }
+@media (min-width: 1520px) { .ad-side { display: block; } }
+.ad-banner { display: flex; justify-content: center; margin: 40px auto; min-height: 50px; }
+.ad-banner:empty { display: none; }
+.ad-ph { display: flex; align-items: center; justify-content: center; text-align: center;
+  border: 1px dashed var(--line); border-radius: 8px; color: var(--ink-faint); font-size: 12px; }
