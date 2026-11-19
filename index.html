@@ -4,56 +4,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Traducteur Gen Z → Gen Y</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="description" content="Traduisez l'argot de la Gen Z en langage Gen Y : slay, frr, no cap, bussin… Plus de 80 expressions expliquées.">
     <link rel="icon" href="favicon.ico" sizes="32x32">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="site.webmanifest">
     <meta name="theme-color" content="#5B21B6">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;900&display=swap">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1><img src="logo.svg" alt="" width="44" height="44" style="vertical-align:middle;margin-right:10px">Traducteur Gen Z → Gen Y</h1>
-            <p class="subtitle">Comprenez enfin ce que disent les jeunes !</p>
-        </header>
+    <header class="top">
+        <div class="wrap top-inner">
+            <a class="brand" href="./" aria-label="Traducteur Gen Z vers Gen Y, accueil">
+                <img src="logo.svg" alt="" width="36" height="36">
+                <span>Gen Z → Gen Y</span>
+            </a>
+            <a class="top-link" href="#dictionnaire">Dictionnaire <span class="count" data-count></span></a>
+        </div>
+    </header>
 
-        <div class="translator-section">
-            <div class="input-section">
-                <h2>💬 Expression Gen Z</h2>
-                <textarea
-                    id="genZInput"
-                    placeholder="Entrez une expression Gen Z (ex: 'C'est trop slay frr no cap')"
-                    rows="5"
-                ></textarea>
-            </div>
+    <main>
+        <section class="hero wrap">
+            <h1>Comprenez enfin ce que disent les jeunes</h1>
+            <p class="subtitle">Collez une phrase en argot Gen Z : le traducteur surligne chaque expression et la remplace par ce qu'un Gen Y aurait dit.</p>
 
-            <div class="button-section">
-                <button id="translateBtn" class="translate-btn">
-                    Traduire →
-                </button>
-                <button id="clearBtn" class="clear-btn">
-                    Effacer
-                </button>
-            </div>
+            <div class="translator">
+                <div class="pane pane-in">
+                    <div class="pane-head">
+                        <label for="genZInput">Gen Z</label>
+                        <button id="clearBtn" class="ghost" type="button" hidden>Effacer</button>
+                    </div>
+                    <textarea id="genZInput" rows="6" spellcheck="false"
+                        placeholder="Ex. : c'est trop slay frr no cap"></textarea>
+                    <div class="examples" aria-label="Exemples à essayer">
+                        <span class="examples-label">Essayez :</span>
+                        <button type="button" class="example">c'est trop slay frr no cap</button>
+                        <button type="button" class="example">ce burger est bussin, sheesh</button>
+                        <button type="button" class="example">lowkey son rizz est cringe, mood</button>
+                    </div>
+                </div>
 
-            <div class="output-section">
-                <h2>🎯 Traduction Gen Y</h2>
-                <div id="genYOutput" class="output-box">
-                    <p class="placeholder">La traduction apparaîtra ici...</p>
+                <div class="pane pane-out" aria-live="polite">
+                    <div class="pane-head">
+                        <span class="pane-title">Gen Y</span>
+                        <button id="copyBtn" class="ghost" type="button" hidden>Copier</button>
+                    </div>
+                    <div id="genYOutput" class="output">
+                        <p class="empty">La traduction s'affiche ici dès que vous écrivez.</p>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button id="translateBtn" class="primary" type="button">Traduire</button>
+                    <span class="hint"><kbd>Ctrl</kbd> + <kbd>Entrée</kbd></span>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <div class="dictionary-section">
-            <h2>📖 Dictionnaire des expressions</h2>
-            <div id="dictionaryList" class="dictionary-grid"></div>
-        </div>
+        <section class="dictionary" id="dictionnaire">
+            <div class="wrap">
+                <div class="dict-head">
+                    <div>
+                        <h2>Dictionnaire des expressions</h2>
+                        <p><span data-count></span> expressions, de A à Z.</p>
+                    </div>
+                    <div class="search">
+                        <label for="dictSearch" class="sr-only">Chercher une expression</label>
+                        <input id="dictSearch" type="search" placeholder="Chercher une expression ou un sens" autocomplete="off">
+                    </div>
+                </div>
+                <div id="dictionaryList" class="dict-list"></div>
+                <p id="dictEmpty" class="dict-empty" hidden>Aucune expression ne correspond. Essayez un autre mot, par exemple « vibe » ou « génial ».</p>
+            </div>
+        </section>
+    </main>
 
-        <footer>
-            <p>Créé avec ❤️ pour rapprocher les générations</p>
-        </footer>
-    </div>
+    <footer class="wrap foot">
+        <p>Créé avec ❤️ pour rapprocher les générations</p>
+    </footer>
 
     <script src="script.js"></script>
 </body>

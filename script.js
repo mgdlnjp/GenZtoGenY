@@ -90,89 +90,177 @@ const translationDictionary = {
     'simp for': 'craquer pour',
 };
 
-// Fonction pour afficher le dictionnaire
-function displayDictionary() {
-    const dictionaryList = document.getElementById('dictionaryList');
+// ---------------------------------------------------------------------------
+// Traduction : un seul passage sur le texte, expressions les plus longues d'abord
+// (« no cap » avant « cap », « frr » avant « fr »). Le texte saisi n'est jamais
+// injecté en HTML : tout est construit avec des nœuds texte.
+// ---------------------------------------------------------------------------
 
-    // Trier les termes par ordre alphabétique
-    const sortedTerms = Object.keys(translationDictionary).sort();
+const terms = Object.keys(translationDictionary).sort((a, b) => b.length - a.length);
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const slangPattern = new RegExp(
+    '(?<![\\p{L}\\p{N}])(' + terms.map(escapeRegex).join('|') + ')(?![\\p{L}\\p{N}])',
+    'giu'
+);
 
-    sortedTerms.forEach(genZTerm => {
-        const genYTerm = translationDictionary[genZTerm];
+const $ = (id) => document.getElementById(id);
+const input = $('genZInput');
+const output = $('genYOutput');
+const copyBtn = $('copyBtn');
+const clearBtn = $('clearBtn');
+let plainTranslation = '';
 
-        const item = document.createElement('div');
-        item.className = 'dictionary-item';
-
-        item.innerHTML = `
-            <div class="gen-z-term">${genZTerm}</div>
-            <div class="gen-y-term">→ ${genYTerm}</div>
-        `;
-
-        dictionaryList.appendChild(item);
-    });
+function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
 }
 
-// Fonction de traduction
-function translateText() {
-    const input = document.getElementById('genZInput').value;
-    const output = document.getElementById('genYOutput');
+function showEmpty(message) {
+    output.replaceChildren(el('p', 'empty', message));
+    copyBtn.hidden = true;
+    plainTranslation = '';
+}
 
-    if (!input.trim()) {
-        output.innerHTML = '<p class="placeholder">Veuillez entrer du texte à traduire...</p>';
+function translateText() {
+    const text = input.value;
+    clearBtn.hidden = text === '';
+
+    if (!text.trim()) {
+        showEmpty("La traduction s'affiche ici dès que vous écrivez.");
         return;
     }
 
-    let translatedText = input.toLowerCase();
-    let foundTranslations = [];
+    const sentence = el('p', 'sentence');
+    const found = new Map();
+    let plain = '';
+    let last = 0;
 
-    // Chercher les correspondances dans le dictionnaire
-    for (const [genZ, genY] of Object.entries(translationDictionary)) {
-        const regex = new RegExp('\\b' + genZ.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
-        if (regex.test(translatedText)) {
-            foundTranslations.push({ genZ, genY });
-            translatedText = translatedText.replace(regex, `<strong>${genY}</strong>`);
-        }
+    for (const match of text.matchAll(slangPattern)) {
+        const key = match[0].toLowerCase();
+        const meaning = translationDictionary[key];
+        const before = text.slice(last, match.index);
+        sentence.append(before);
+        const mark = el('mark', '', meaning);
+        mark.title = match[0];
+        sentence.append(mark);
+        plain += before + meaning;
+        found.set(key, meaning);
+        last = match.index + match[0].length;
+    }
+    sentence.append(text.slice(last));
+    plain += text.slice(last);
+
+    if (found.size === 0) {
+        const miss = el('p', 'miss');
+        miss.append('Aucune expression Gen Z repérée. Essayez par exemple ');
+        miss.append(el('strong', '', 'slay'), ', ', el('strong', '', 'no cap'), ' ou ', el('strong', '', 'bussin'), '.');
+        output.replaceChildren(miss);
+        copyBtn.hidden = true;
+        plainTranslation = '';
+        return;
     }
 
-    if (foundTranslations.length === 0) {
-        output.innerHTML = `
-            <p><strong>Texte original :</strong> ${input}</p>
-            <p style="color: #ff6b6b; margin-top: 15px;">⚠️ Aucune expression Gen Z détectée dans ce texte.</p>
-            <p style="color: #666; margin-top: 10px;">Essayez des mots comme : slay, frr, no cap, bussin, sheesh, etc.</p>
-        `;
-    } else {
-        output.innerHTML = `
-            <p style="margin-bottom: 15px;"><strong>Traduction :</strong></p>
-            <p style="line-height: 1.8;">${translatedText}</p>
-            <p style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #e0e0e0; color: #667eea;">
-                ✅ ${foundTranslations.length} expression(s) traduite(s)
-            </p>
-        `;
-    }
+    const list = el('dl');
+    found.forEach((meaning, key) => list.append(el('dt', '', key), el('dd', '', meaning)));
+    const summary = el('div', 'found');
+    summary.append(
+        el('p', 'found-title', found.size === 1 ? '1 expression traduite' : `${found.size} expressions traduites`),
+        list
+    );
+
+    output.classList.remove('fresh');
+    void output.offsetWidth; // relance l'animation du surligneur
+    output.classList.add('fresh');
+    output.replaceChildren(sentence, summary);
+    plainTranslation = plain;
+    copyBtn.hidden = false;
+    copyBtn.textContent = 'Copier';
 }
 
-// Fonction pour effacer
 function clearAll() {
-    document.getElementById('genZInput').value = '';
-    document.getElementById('genYOutput').innerHTML = '<p class="placeholder">La traduction apparaîtra ici...</p>';
+    input.value = '';
+    translateText();
+    input.focus();
 }
 
-// Écouteurs d'événements
+// ---------------------------------------------------------------------------
+// Dictionnaire : regroupé par lettre, avec recherche sur l'expression ou le sens
+// ---------------------------------------------------------------------------
+
+const normalize = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+function displayDictionary(filter = '') {
+    const list = $('dictionaryList');
+    const query = normalize(filter.trim());
+    const groups = new Map();
+
+    Object.keys(translationDictionary)
+        .sort((a, b) => a.localeCompare(b, 'fr'))
+        .forEach((term) => {
+            const meaning = translationDictionary[term];
+            if (query && !normalize(term + ' ' + meaning).includes(query)) return;
+            const letter = normalize(term[0]).toUpperCase();
+            if (!groups.has(letter)) groups.set(letter, []);
+            groups.get(letter).push([term, meaning]);
+        });
+
+    const blocks = [];
+    groups.forEach((entries, letter) => {
+        const block = el('div', 'letter');
+        const dl = el('dl');
+        entries.forEach(([term, meaning]) => {
+            const row = el('div', 'entry');
+            row.append(el('dt', '', term), el('dd', '', meaning));
+            dl.append(row);
+        });
+        block.append(el('h3', '', letter), dl);
+        blocks.push(block);
+    });
+
+    list.replaceChildren(...blocks);
+    $('dictEmpty').hidden = blocks.length > 0;
+}
+
+// ---------------------------------------------------------------------------
+// Écouteurs
+// ---------------------------------------------------------------------------
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Afficher le dictionnaire au chargement
+    const total = Object.keys(translationDictionary).length;
+    document.querySelectorAll('[data-count]').forEach((n) => (n.textContent = total));
     displayDictionary();
 
-    // Bouton traduire
-    document.getElementById('translateBtn').addEventListener('click', translateText);
-
-    // Bouton effacer
-    document.getElementById('clearBtn').addEventListener('click', clearAll);
-
-    // Traduction en appuyant sur Entrée (avec Ctrl)
-    document.getElementById('genZInput').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && e.ctrlKey) {
+    let timer;
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(translateText, 250);
+    });
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();
             translateText();
         }
     });
+
+    $('translateBtn').addEventListener('click', translateText);
+    clearBtn.addEventListener('click', clearAll);
+
+    document.querySelectorAll('.example').forEach((btn) =>
+        btn.addEventListener('click', () => {
+            input.value = btn.textContent;
+            translateText();
+        })
+    );
+
+    copyBtn.addEventListener('click', () => {
+        if (!plainTranslation) return;
+        navigator.clipboard.writeText(plainTranslation).then(
+            () => (copyBtn.textContent = 'Copié'),
+            () => (copyBtn.textContent = 'Copie impossible')
+        );
+    });
+
+    $('dictSearch').addEventListener('input', (e) => displayDictionary(e.target.value));
 });

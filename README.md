@@ -10,16 +10,16 @@ Cette application aide à combler le fossé générationnel en traduisant les ex
 
 - **Traduction en temps réel** : Entrez du texte contenant des expressions Gen Z et obtenez une traduction instantanée
 - **Dictionnaire complet** : Plus de 80 expressions Gen Z avec leurs équivalents Gen Y
-- **Interface moderne** : Design épuré et responsive avec dégradés colorés
+- **Interface moderne** : design épuré et responsive, surligneur jaune sur les expressions traduites, bouton copier, exemples à essayer
 - **Facile à utiliser** : Interface intuitive avec boutons de traduction et d'effacement
 
 ## Comment utiliser
 
 1. Ouvrez le fichier `index.html` dans votre navigateur web
 2. Entrez une expression Gen Z dans la zone de texte (ex: "C'est trop slay frr no cap")
-3. Cliquez sur le bouton "Traduire →" ou utilisez Ctrl+Entrée
-4. La traduction apparaîtra dans la zone de sortie
-5. Consultez le dictionnaire en bas de page pour voir toutes les expressions disponibles
+3. La traduction s'affiche pendant que vous écrivez (ou cliquez sur "Traduire", ou utilisez Ctrl+Entrée)
+4. Les expressions traduites sont surlignées en jaune, avec la liste des expressions repérées
+5. Consultez le dictionnaire en bas de page, avec une recherche par expression ou par sens
 
 ## Exemples d'expressions traduites
 
